@@ -1,0 +1,10 @@
+.notaTexto{
+  text-align: center;
+  font-size: 1.1em;
+  font-weight: 700;
+  font-style: italic;
+}
+
+#chartCont{
+  height: 500px;
+}
