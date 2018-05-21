@@ -245,6 +245,7 @@ function graph(datos){
 
     dataset["label"] = key;
     dataset["data"]=data;
+    dataset["lineTension"] = 0.25;
     dataset["borderColor"] = colors[usedColors][2];
     dataset["backgroundColor"]=colors[usedColors][1];
     usedColors+=1;
@@ -263,9 +264,10 @@ console.log(dates);
     type: 'line',
     data: {
       labels: dates,
-      datasets: datasetsCat
+      datasets: datasetsCat,
     },
     options: {
+      lineTension : 0,
       responsive: true,
       title: {
         display: false,
@@ -305,9 +307,6 @@ console.log(dates);
             display: true,
             labelString: 'Cantidad',
             fontSize: '16'
-          },
-          ticks: {
-            suggestedMax: 500,
           }
         }]
       }
