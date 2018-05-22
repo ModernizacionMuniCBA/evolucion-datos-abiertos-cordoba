@@ -177,15 +177,11 @@ function graph(datos){
     }
 
     var dates = [];
-    $.each( dato.versiones, function( key, version ) {
-      dates.push(new Date(version.fecha));
-    });
-    var minDatoDate = new Date(Math.min.apply(null,dates));
 
-    if(datosxMes[moment(minDatoDate).format('YYYY-MM')]){
-      datosxMes[moment(minDatoDate).format('YYYY-MM')] += 1;
+    if(datosxMes[moment(dato.creado).format('YYYY-MM')]){
+      datosxMes[moment(dato.creado).format('YYYY-MM')] += 1;
     }else{
-      datosxMes[moment(minDatoDate).format('YYYY-MM')] = 1;
+      datosxMes[moment(dato.creado).format('YYYY-MM')] = 1;
     }
 
     datosxCatxMes[dato.categoria].push(datosxMes);
@@ -288,9 +284,8 @@ console.log(dates);
         xAxes: [{
           type: 'time',
           time: {
-              unit: 'month',
-              min:'2016/01'
-           },
+              unit: 'month'
+          },
            distribution: 'series',
            scaleLabel: {
              display: true,
