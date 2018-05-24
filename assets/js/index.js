@@ -1,12 +1,20 @@
-
-
 $(document).ready(function() {
+  var hash = "";
+  if(window.location.hash) {
+    hash = document.URL.substr(document.URL.indexOf('#')+1)
+  }
+
+  var tipo = hash.split("-")[0];
+  var filtroH = hash.split("-")[1];
+
   var dShown = false;
   var rShown = false;
+
   $('.filtroFecha input').on('change', function(e){
     getDataCat("recursos", $(this).val());
   })
   $(".filter").on('click', function(e){
+    e.preventDefault();
     var filter = $(this).data("filter");
     $('.filter').removeClass('active');
     $(this).addClass('active');
@@ -14,6 +22,7 @@ $(document).ready(function() {
       if(dShown){
         $("#chartRCont").hide();
         $("#chartDCont").show();
+        window.location.hash = "datos";
       }else{
         $("#chartRCont").hide();
         $("#chartDCont").show();
@@ -23,6 +32,7 @@ $(document).ready(function() {
       if(rShown){
         $("#chartDCont").hide();
         $("#chartRCont").show();
+        window.location.hash = "recursos-"+$('.filtroFecha input').val();
       }else{
         $("#chartDCont").hide();
         $("#chartRCont").show();
@@ -133,7 +143,30 @@ var colors = [[window.chartColors.red, window.chartColors.red_solid, window.char
             ]
 var today = new Date().toLocaleDateString();
 var catDatos;
-getDataCat("datos", "v");
+
+
+
+if(tipo==undefined || tipo=="" || tipo=="datos"){
+  tipo = "datos";
+  getDataCat("datos", null);
+}else{
+  if(filtroH==undefined){
+    filtroH = "v";
+  }
+  getDataCat(tipo, filtroH);
+  $('.filtroFecha input[value='+filtroH+']').attr('checked', true);
+
+  $("#chartDCont").hide();
+  $("#chartRCont").show();
+}
+
+$('.filter').each(function( index ) {
+  if($(this).data("filter")==tipo){
+    $(this).addClass('active');
+    return false;
+  }
+});
+
 function getDataCat(graphName, filtroFecha){
   if (localStorage.graphDatosCatData == null || localStorage.graphDatosCatData == "null" || localStorage.graphDatosCatData == "undefined" || localStorage.userDate != today ) {
     $.getJSON("https://gobiernoabierto.cordoba.gob.ar/api/categorias-datos-abiertos/?page_size=100", function(dataJSON) {
@@ -205,7 +238,7 @@ function getDatoCat(array, query){
 }
 function graph(datos){
   // var datosxMesxCat = {};
-
+  dShown=true;
   var datosxCatxMes = {};
   $.each( catDatos, function( key, categoria ) {
     if(categoria.depende == null){
@@ -351,16 +384,17 @@ function graph(datos){
   };
 
   moment.locale('es');
-
   var colorNames = Object.keys(window.chartColors);
   stopSpinner('chartCont');
   // var myChart = new Chart(ctx, config);
   window.myChart = new Chart(ctx, config);
+  window.location.hash = "datos";
 }
 
 
 function graphRe(datos, filtroFecha){
   var datosxMes = {};
+  rShown=true;
   $.each( datos, function( key, dato ) {
     $.each( dato.versiones, function( key, version ) {
       var totVer = 0;
@@ -462,6 +496,7 @@ function graphRe(datos, filtroFecha){
   stopSpinner('chartCont');
   // var myChart = new Chart(ctx, config);
   window.myChart = new Chart(ctx, config);
+  window.location.hash = "recursos-"+filtroFecha;
 }
 
 });
