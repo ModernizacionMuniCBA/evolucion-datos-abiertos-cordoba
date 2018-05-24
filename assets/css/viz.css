@@ -8,3 +8,14 @@
 #chartCont{
   height: 500px;
 }
+
+input[type=radio]{
+  margin-right: 5px;
+}
+label{
+  margin-right: 20px;
+}
+.filtroFecha{
+  text-align: right;
+  margin-top: 10px;
+}

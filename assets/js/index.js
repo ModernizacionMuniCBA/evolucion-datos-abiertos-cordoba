@@ -3,6 +3,9 @@
 $(document).ready(function() {
   var dShown = false;
   var rShown = false;
+  $('.filtroFecha input').on('change', function(e){
+    getDataCat("recursos", $(this).val());
+  })
   $(".filter").on('click', function(e){
     var filter = $(this).data("filter");
     $('.filter').removeClass('active');
@@ -14,7 +17,7 @@ $(document).ready(function() {
       }else{
         $("#chartRCont").hide();
         $("#chartDCont").show();
-        getDataCat("datos");
+        getDataCat("datos", null);
       }
     }else{
       if(rShown){
@@ -23,7 +26,7 @@ $(document).ready(function() {
       }else{
         $("#chartDCont").hide();
         $("#chartRCont").show();
-        getDataCat("recursos");
+        getDataCat("recursos", $('.filtroFecha input').val());
       }
     }
   });
@@ -130,22 +133,22 @@ var colors = [[window.chartColors.red, window.chartColors.red_solid, window.char
             ]
 var today = new Date().toLocaleDateString();
 var catDatos;
-getDataCat("datos");
-function getDataCat(graphName){
+getDataCat("datos", "v");
+function getDataCat(graphName, filtroFecha){
   if (localStorage.graphDatosCatData == null || localStorage.graphDatosCatData == "null" || localStorage.graphDatosCatData == "undefined" || localStorage.userDate != today ) {
     $.getJSON("https://gobiernoabierto.cordoba.gob.ar/api/categorias-datos-abiertos/?page_size=100", function(dataJSON) {
       var catDatosAux = dataJSON.results;
       localStorage.graphDatosCatData = JSON.stringify(catDatosAux);
       catDatos = generateMap(catDatosAux);
-      getData(graphName);
+      getData(graphName, filtroFecha);
     });
   } else {
       catDatosAux = JSON.parse(localStorage.graphDatosCatData);
       catDatos = generateMap(catDatosAux);
-      getData(graphName);
+      getData(graphName, filtroFecha);
   }
 }
-function getData(graphName){
+function getData(graphName, filtroFecha){
   if (localStorage.graphDatosData == null || localStorage.graphDatosData == "null" || localStorage.graphDatosData == "undefined" || localStorage.userDate != today ) {
     $.getJSON("https://gobiernoabierto.cordoba.gob.ar/api/datos-abiertos/?page_size=600", function(dataJSON) {
       var datos = dataJSON.results;
@@ -153,7 +156,7 @@ function getData(graphName){
       if(graphName=="datos"){
         graph(datos);
       }else{
-        graphRe(datos);
+        graphRe(datos, filtroFecha);
       }
 
     });
@@ -162,7 +165,7 @@ function getData(graphName){
       if(graphName=="datos"){
         graph(datos);
       }else{
-        graphRe(datos);
+        graphRe(datos, filtroFecha);
       }
   }
 }
@@ -356,7 +359,7 @@ function graph(datos){
 }
 
 
-function graphRe(datos){
+function graphRe(datos, filtroFecha){
   var datosxMes = {};
   $.each( datos, function( key, dato ) {
     $.each( dato.versiones, function( key, version ) {
@@ -365,11 +368,20 @@ function graphRe(datos){
         totVer+=1;
       });
       var fecha = new Date(version.fecha);
-      if(datosxMes[moment(fecha).format('YYYY-MM')]){
-        datosxMes[moment(fecha).format('YYYY-MM')] += totVer;
+      if(filtroFecha == "v"){
+        if(datosxMes[moment(fecha).format('YYYY-MM')]){
+          datosxMes[moment(fecha).format('YYYY-MM')] += totVer;
+        }else{
+          datosxMes[moment(fecha).format('YYYY-MM')] = totVer;
+        }
       }else{
-        datosxMes[moment(fecha).format('YYYY-MM')] = totVer;
+        if(datosxMes[moment(dato.creado).format('YYYY-MM')]){
+          datosxMes[moment(dato.creado).format('YYYY-MM')] += totVer;
+        }else{
+          datosxMes[moment(dato.creado).format('YYYY-MM')] = totVer;
+        }
       }
+
     });
   });
   var datosxMes = sortMapByKeyRe(datosxMes);
