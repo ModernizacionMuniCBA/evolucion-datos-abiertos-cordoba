@@ -156,6 +156,13 @@
       </div>
           <h2 class="repoTitle">Evolución de Datos Abiertos - Córdoba</h2>
       <!--/.nav-collapse -->
+      <div class="stroke" style="display: inline;">
+        <ul class="nav navbar-nav navbar-right ">
+
+          <li><a href="#" class="filter active" data-filter="datos">Series de Datos</a></li>
+          <li><a href="#" class="filter" data-filter="recursos">Recursos</a></li>
+        </ul>
+      </div>
     </div>
   </nav>
 
@@ -165,10 +172,12 @@
       <div class="chart-container col-xs-12 col-lg-10 col-lg-offset-1" id="chartCont">
       </div>
       <div class="chart-container col-xs-12 col-lg-10 col-lg-offset-1">
-          <canvas id="chart"></canvas>
-      </div>
-      <div class="col-xs-12 notaTexto">
-        <p cla>Nota: Se muestra cantidad de datos detallada por mes desde el año 2016 en adelante.</p>
+        <div id="chartDCont">
+          <canvas id="chartD"></canvas>
+        </div>
+        <div id="chartRCont">
+          <canvas id="chartR"></canvas>
+        </div>
       </div>
 
     </div>

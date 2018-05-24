@@ -1,6 +1,32 @@
 
 
 $(document).ready(function() {
+  var dShown = false;
+  var rShown = false;
+  $(".filter").on('click', function(e){
+    var filter = $(this).data("filter");
+    $('.filter').removeClass('active');
+    $(this).addClass('active');
+    if(filter == "datos"){
+      if(dShown){
+        $("#chartRCont").hide();
+        $("#chartDCont").show();
+      }else{
+        $("#chartRCont").hide();
+        $("#chartDCont").show();
+        getDataCat("datos");
+      }
+    }else{
+      if(rShown){
+        $("#chartDCont").hide();
+        $("#chartRCont").show();
+      }else{
+        $("#chartDCont").hide();
+        $("#chartRCont").show();
+        getDataCat("recursos");
+      }
+    }
+  });
 
   var spinner;
   function startSpinner(elementId) {
@@ -47,6 +73,13 @@ $(document).ready(function() {
     return map;
   }
 
+  function sortMapByKeyRe(map) {
+    const ordered = {};
+    Object.keys(map).sort().forEach(function(key) {
+      ordered[key] = map[key];
+    });
+    return ordered;
+  }
   window.chartColors = {
   strong_red: 'rgba(255,0,0,0.5)',
 	red: 'rgba(255, 99, 132,0.5)',
@@ -97,30 +130,40 @@ var colors = [[window.chartColors.red, window.chartColors.red_solid, window.char
             ]
 var today = new Date().toLocaleDateString();
 var catDatos;
-
-if (localStorage.graphDatosCatData == null || localStorage.graphDatosCatData == "null" || localStorage.graphDatosCatData == "undefined" || localStorage.userDate != today ) {
-  $.getJSON("https://gobiernoabierto.cordoba.gob.ar/api/categorias-datos-abiertos/?page_size=100", function(dataJSON) {
-    var catDatosAux = dataJSON.results;
-    localStorage.graphDatosCatData = JSON.stringify(catDatosAux);
-    catDatos = generateMap(catDatosAux);
-    getData();
-  });
-} else {
-    catDatosAux = JSON.parse(localStorage.graphDatosCatData);
-    catDatos = generateMap(catDatosAux);
-    getData();
+getDataCat("datos");
+function getDataCat(graphName){
+  if (localStorage.graphDatosCatData == null || localStorage.graphDatosCatData == "null" || localStorage.graphDatosCatData == "undefined" || localStorage.userDate != today ) {
+    $.getJSON("https://gobiernoabierto.cordoba.gob.ar/api/categorias-datos-abiertos/?page_size=100", function(dataJSON) {
+      var catDatosAux = dataJSON.results;
+      localStorage.graphDatosCatData = JSON.stringify(catDatosAux);
+      catDatos = generateMap(catDatosAux);
+      getData(graphName);
+    });
+  } else {
+      catDatosAux = JSON.parse(localStorage.graphDatosCatData);
+      catDatos = generateMap(catDatosAux);
+      getData(graphName);
+  }
 }
-
-function getData(){
+function getData(graphName){
   if (localStorage.graphDatosData == null || localStorage.graphDatosData == "null" || localStorage.graphDatosData == "undefined" || localStorage.userDate != today ) {
     $.getJSON("https://gobiernoabierto.cordoba.gob.ar/api/datos-abiertos/?page_size=600", function(dataJSON) {
       var datos = dataJSON.results;
       localStorage.graphDatosData = JSON.stringify(datos);
-      graph(datos);
+      if(graphName=="datos"){
+        graph(datos);
+      }else{
+        graphRe(datos);
+      }
+
     });
   } else {
       var datos = JSON.parse(localStorage.graphDatosData);
-      graph(datos);
+      if(graphName=="datos"){
+        graph(datos);
+      }else{
+        graphRe(datos);
+      }
   }
 }
 
@@ -227,7 +270,6 @@ function graph(datos){
       return exists;
     }
 
-    console.log(cat);
     $.each( dates, function( keyDate, date ) {
       var val = existsDate(date, cat);
       if(val != 0){
@@ -250,12 +292,9 @@ function graph(datos){
 
 
 
-console.log(datasetsCat);
-console.log(dates);
 
 
-
-  var ctx = document.getElementById("chart");
+  var ctx = document.getElementById("chartD");
   var config = {
     type: 'line',
     data: {
@@ -289,7 +328,7 @@ console.log(dates);
            distribution: 'series',
            scaleLabel: {
              display: true,
-             labelString: 'Año',
+             labelString: 'Mes',
              fontSize: '16'
            },
            ticks: {
@@ -316,6 +355,102 @@ console.log(dates);
   window.myChart = new Chart(ctx, config);
 }
 
+
+function graphRe(datos){
+  var datosxMes = {};
+  $.each( datos, function( key, dato ) {
+    $.each( dato.versiones, function( key, version ) {
+      var totVer = 0;
+      $.each( version.recursos, function( key, recurso ) {
+        totVer+=1;
+      });
+      var fecha = new Date(version.fecha);
+      if(datosxMes[moment(fecha).format('YYYY-MM')]){
+        datosxMes[moment(fecha).format('YYYY-MM')] += totVer;
+      }else{
+        datosxMes[moment(fecha).format('YYYY-MM')] = totVer;
+      }
+    });
+  });
+  var datosxMes = sortMapByKeyRe(datosxMes);
+  var totMonthly=0;
+  var dates=[];
+  var data = [];
+  $.each( datosxMes, function( key, dato ) {
+    totMonthly+=dato;
+    dates.push(key);
+    data.push(totMonthly);
+  });
+
+
+  var ctx = document.getElementById("chartR");
+  var config = {
+    type: 'line',
+    data: {
+      labels: dates,
+      datasets: [{
+        label: 'Recursos',
+        borderColor: window.chartColors.red_solid,
+        backgroundColor: window.chartColors.red_solid,
+        data: data,
+        fill: false,
+      }]
+    },
+    options: {
+      responsive: true,
+      title: {
+        display: false,
+        text: 'Evolución de Datos Abiertos - Córdoba'
+      },
+      tooltips: {
+        mode: 'index',
+        callbacks: {
+            title: function(tooltipItem, data) {
+                return moment(tooltipItem[0].xLabel).format('MMM YYYY');
+            }
+        }
+      },
+      hover: {
+        mode: 'index'
+      },
+      scales: {
+        xAxes: [{
+          type: 'time',
+          time: {
+              unit: 'month',
+              // min:'2016/01'
+           },
+           distribution: 'series',
+           scaleLabel: {
+             display: true,
+             labelString: 'Mes',
+             fontSize: '16'
+           },
+           ticks: {
+             source: 'labels'
+           }
+        }],
+        yAxes: [{
+          scaleLabel: {
+            display: true,
+            labelString: 'Cantidad',
+            fontSize: '16'
+          },
+          ticks: {
+            suggestedMax: 4600,
+          }
+        }]
+      }
+    }
+  };
+
+  moment.locale('es');
+
+  var colorNames = Object.keys(window.chartColors);
+  stopSpinner('chartCont');
+  // var myChart = new Chart(ctx, config);
+  window.myChart = new Chart(ctx, config);
+}
 
 });
 
